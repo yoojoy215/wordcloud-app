@@ -296,7 +296,6 @@ col1, col2 = st.columns([1, 1])
 
 if analyze_button:
     if not article_url:
-    if not article_url:
         st.error("❌ URL을 입력해주세요!")
     else:
         # URL 정규화 (메인 페이지면 최신 기사로 변환)

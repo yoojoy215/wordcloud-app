@@ -29,27 +29,37 @@ def get_font_path():
     system = platform.system()
     
     if system == 'Windows':
-        return 'C:/Windows/Fonts/malgun.ttf'
+        possible_paths = ['C:/Windows/Fonts/malgun.ttf']
     elif system == 'Darwin':  # macOS
-        return '/System/Library/Fonts/Arial Unicode.ttf'
-    else:  # Linux
+        possible_paths = [
+            '/System/Library/Fonts/Arial Unicode.ttf',
+            '/Library/Fonts/Arial Unicode.ttf'
+        ]
+    else:  # Linux (Streamlit Cloud 포함)
         possible_paths = [
             '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
+            '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc',
             '/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc',
+            '/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc',
             '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
         ]
-        for path in possible_paths:
-            if os.path.exists(path):
-                return path
-        return None
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            return path
+    
+    return None
 
 # 폰트 설정
 font_path = get_font_path()
-if font_path and os.path.exists(font_path):
-    plt.rcParams['font.family'] = 'DejaVu Sans'
-else:
-    # 폰트를 찾을 수 없으면 기본값 사용
-    plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial Unicode MS', 'SimHei']
+try:
+    if font_path and os.path.exists(font_path):
+        plt.rcParams['font.family'] = 'DejaVu Sans'
+    else:
+        # 폰트를 찾을 수 없으면 기본값 사용
+        plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial Unicode MS', 'SimHei', 'Noto Sans CJK']
+except Exception as e:
+    print(f"Font setup warning: {e}")
 
 plt.rcParams['axes.unicode_minus'] = False
 
@@ -230,17 +240,23 @@ def create_wordcloud(word_freq, width=1200, height=800, colormap='viridis'):
     
     font_path_to_use = get_font_path()
     
-    wc = WordCloud(
-        font_path=font_path_to_use if font_path_to_use and os.path.exists(font_path_to_use) else None,
-        width=width,
-        height=height,
-        background_color='white',
-        max_words=100,
-        relative_scaling=0.3,
-        colormap=colormap
-    ).generate_from_frequencies(word_freq)
-    
-    return wc
+    try:
+        wc = WordCloud(
+            font_path=font_path_to_use if font_path_to_use and os.path.exists(font_path_to_use) else None,
+            width=width,
+            height=height,
+            background_color='white',
+            max_words=100,
+            relative_scaling=0.3,
+            colormap=colormap,
+            prefer_horizontal=0.7,
+            min_font_size=10
+        ).generate_from_frequencies(word_freq)
+        
+        return wc
+    except Exception as e:
+        st.error(f"⚠️ 워드클라우드 생성 중 오류: {str(e)}")
+        return None
 
 # ============ UI 구성 ============
 
